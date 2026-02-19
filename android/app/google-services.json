@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "531558083130",
+    "project_id": "teachmap-80e32",
+    "storage_bucket": "teachmap-80e32.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:531558083130:android:420901ba760b63d0752303",
+        "android_client_info": {
+          "package_name": "com.example.teachmap"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDF2CuxJE_wap_BmvhE266BloenQcEQrFw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
