@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart' hide Badge;
 import 'package:teachmap/profile_page.dart';
+import 'package:teachmap/student_routine_page.dart';
 import 'package:teachmap/widget/smart_tile.dart';
+import '_batch_routine_page.dart';
+import 'class_routine_upload _student.dart';
 import 'search_teacher_page.dart';
 import 'package:badges/badges.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -25,6 +28,9 @@ class _StudentHomePageState extends State<StudentHomePage> {
       appBar: AppBar(
         elevation: 0,
         backgroundColor: const Color(0xFF027a9c),
+        iconTheme: const IconThemeData(
+          color: Colors.white, // 👈 Back arrow color
+        ),
         title: const Text(
           "Student Dashboard 🧑‍🎓",
           style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white),
@@ -106,7 +112,7 @@ class _StudentHomePageState extends State<StudentHomePage> {
             gradient: const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [Color(0xff5B6CFF), Color(0xff7F8CFF)],
+              colors: [Color(0xFF027a9c), Color(0xFF027a9c)],
             ),
             borderRadius: BorderRadius.circular(22),
             boxShadow: [
@@ -122,7 +128,7 @@ class _StudentHomePageState extends State<StudentHomePage> {
               const CircleAvatar(
                 radius: 30,
                 backgroundColor: Colors.white,
-                child: Icon(Icons.school, size: 34, color: Color(0xff5B6CFF)),
+                child: Icon(Icons.school, size: 34, color: Color(0xFF027a9c)),
               ),
               const SizedBox(width: 16),
               const Expanded(
@@ -130,7 +136,7 @@ class _StudentHomePageState extends State<StudentHomePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text("Welcome back 👋",
-                        style: TextStyle(color: Colors.white70)),
+                        style: TextStyle(color: Colors.white)),
                     SizedBox(height: 6),
                     Text("Student",
                         style: TextStyle(
@@ -139,25 +145,12 @@ class _StudentHomePageState extends State<StudentHomePage> {
                             fontWeight: FontWeight.bold)),
                     SizedBox(height: 6),
                     Text("Track your teachers & classes easily",
-                        style: TextStyle(color: Colors.white70)),
+                        style: TextStyle(color: Colors.white)),
                   ],
                 ),
               ),
             ],
           ),
-        ),
-
-        const SizedBox(height: 22),
-
-        /// 🔹 Quick Stats Row
-        Row(
-          children: [
-            _infoCard("Teachers", "12", Icons.person, Colors.blue),
-            const SizedBox(width: 12),
-            _infoCard("Classes", "5", Icons.class_, Colors.green),
-            const SizedBox(width: 12),
-            _infoCard("Status", "Live", Icons.circle, Colors.red),
-          ],
         ),
 
         const SizedBox(height: 26),
@@ -175,7 +168,9 @@ class _StudentHomePageState extends State<StudentHomePage> {
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const SearchTeacherPage()),
+              MaterialPageRoute(
+                builder: (_) => const SearchTeacherPage(),
+              ),
             );
           },
         ),
@@ -184,8 +179,8 @@ class _StudentHomePageState extends State<StudentHomePage> {
           context,
           icon: Icons.location_on,
           color: Colors.red,
-          title: "Teacher Live Location",
-          subtitle: "View teacher’s current location",
+          title: "Room Search",
+          subtitle: "View which rooms are free now",
         ),
 
         SmartTile(
@@ -193,23 +188,49 @@ class _StudentHomePageState extends State<StudentHomePage> {
           icon: Icons.class_,
           color: Colors.green,
           title: "Current Class",
-          subtitle: "See which class teacher is taking now",
+          subtitle: "See which class running now",
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const BatchRoutinePage(),
+              ),
+            );
+          },
         ),
 
-        SmartTile(
-          context,
-          icon: Icons.access_time,
-          color: Colors.orange,
-          title: "Teacher Status",
-          subtitle: "Check if teacher is free or busy",
-        ),
 
         SmartTile(
           context,
           icon: Icons.calendar_month,
           color: Colors.purple,
           title: "Weekly Timetable",
-          subtitle: "View teacher’s weekly schedule",
+          subtitle: "View Batch wise weekly class schedule",
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const StudentRoutinePage(),
+              ),
+            );
+          },
+        ),
+
+
+        SmartTile(
+          context,
+          icon: Icons.calendar_month,
+          color: Colors.blueGrey,
+          title: "Upload Class Routine",
+          subtitle: "Schedule",
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const ClassRoutineUploadPage(),
+              ),
+            );
+          },
         ),
       ],
     );

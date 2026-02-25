@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:teachmap/class_routine_upload%20_student.dart';
 import 'package:teachmap/today_schedule_page.dart';
 import 'package:teachmap/upload_routine_page.dart';
 import 'package:teachmap/weekly_timetable_page.dart';
 import 'attendance_list_page.dart';
+import 'attendance_page.dart';
 import 'profile_update_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'login_page.dart';
@@ -182,30 +184,26 @@ class _TeacherHomePageState extends State<TeacherHomePage> {
                 },
               ),
 
-
-              _featureCard(Icons.location_on, "Live Location", Color(0xFFF44336), "Auto-update your location", () {
-                showSnackBar(context, "Location tracking coming soon 🚧");
-              }),
-              _featureCard(Icons.notifications, "Notifications", Color(0xFF9C27B0), "Class reminder alerts", () {
-                showSnackBar(context, "Notifications coming soon 🚧");
-              }),
-              _featureCard(
-                Icons.calendar_month,
-                "Weekly Timetable",
-                Color(0xFF009688),
-                "View weekly schedule",
-                    () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const WeeklyTimetablePage(),
-                    ),
-                  );
-                },
-              ),
+              // _featureCard(Icons.notifications, "Notifications", Color(0xFF9C27B0), "Class reminder alerts", () {
+              //   showSnackBar(context, "Notifications coming soon 🚧");
+              // }),
+              // _featureCard(
+              //   Icons.calendar_month,
+              //   "Weekly Timetable",
+              //   Color(0xFF009688),
+              //   "View weekly schedule",
+              //       () {
+              //     Navigator.push(
+              //       context,
+              //       MaterialPageRoute(
+              //         builder: (context) => const WeeklyTimetablePage(),
+              //       ),
+              //     );
+              //   },
+              // ),
 
               _featureCard(Icons.fact_check, "Take Attendance", Color(0xFF795548), "Mark student attendance", () {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const AttendanceListPage()));
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const AttendancePage()));
               }),
               _featureCard(
                 Icons.upload,
@@ -216,7 +214,7 @@ class _TeacherHomePageState extends State<TeacherHomePage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const UploadRoutinePage(),
+                      builder: (context) => const ClassRoutineUploadPage(),
                     ),
                   );
                 },

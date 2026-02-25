@@ -31,7 +31,7 @@ class _WelcomePageState extends State<WelcomePage> {
           SafeArea(
             child: Column(
               children: [
-                const SizedBox(height: 40),
+                const SizedBox(height: 20),
 
                 // Character image
                 Image.asset(
@@ -39,7 +39,7 @@ class _WelcomePageState extends State<WelcomePage> {
                   height: 460,
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 40),
 
                 // Text content
                 const Text(
@@ -51,14 +51,12 @@ class _WelcomePageState extends State<WelcomePage> {
                   ),
                 ),
 
-                const SizedBox(height: 20),
-
                 // Buttons
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: Column(
                     children: [
-                      const SizedBox(height: 15),
+                      const SizedBox(height: 10),
                       ElevatedButton(
                         onPressed: () {
                           Navigator.push(
