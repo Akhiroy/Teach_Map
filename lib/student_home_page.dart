@@ -19,40 +19,26 @@ class StudentHomePage extends StatefulWidget {
 class _StudentHomePageState extends State<StudentHomePage> {
   int _currentIndex = 0;
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xffF2F4F8),
-
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: const Color(0xFF027a9c),
-        iconTheme: const IconThemeData(
-          color: Colors.white, // 👈 Back arrow color
-        ),
-        title: const Text(
-          "Student Dashboard 🧑‍🎓",
-          style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white),
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.white),
-            onPressed: () async {
-              await FirebaseAuth.instance.signOut();
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => const LoginPage()),
-                    (route) => false,
-              );
-            },
+      body: Stack(
+        children: [
+          /// Background Image
+          Positioned.fill(
+            child: Opacity(
+              opacity: 0.1,
+              child: Image.asset(
+                "img/welcomeOne.jpg",
+                fit: BoxFit.cover,
+              ),
+            ),
           ),
+
+          /// 📄 Main content
+          _dashboardContent(),
         ],
       ),
-
-      body: _dashboardContent(), // moved body to separate method
-
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         backgroundColor: Colors.white,
@@ -65,8 +51,7 @@ class _StudentHomePageState extends State<StudentHomePage> {
 
           if (index == 1) {
             showSnackBar(context, "Notifications coming soon 🚧");
-          }
-          else if (index == 2) {
+          } else if (index == 2) {
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -96,14 +81,40 @@ class _StudentHomePageState extends State<StudentHomePage> {
           ),
         ],
       ),
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: const Color(0xFF027a9c),
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text(
+          "Student Dashboard 🧑‍🎓",
+          style: TextStyle(
+              fontWeight: FontWeight.w600, color: Colors.white),
+        ),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.white),
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut();
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginPage()),
+                    (route) => false,
+              );
+            },
+          ),
+        ],
+      ),
+      backgroundColor: const Color(0xffF2F4F8),
     );
   }
 
-  /// Dashboard Page (Original Student Home Content)
+  /// Dashboard Page
   Widget _dashboardContent() {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+
 
         /// 🔹 Welcome Card
         Container(
@@ -128,15 +139,15 @@ class _StudentHomePageState extends State<StudentHomePage> {
               const CircleAvatar(
                 radius: 30,
                 backgroundColor: Colors.white,
-                child: Icon(Icons.school, size: 34, color: Color(0xFF027a9c)),
+                child:
+                Icon(Icons.school, size: 34, color: Color(0xFF027a9c)),
               ),
               const SizedBox(width: 16),
               const Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("Welcome back 👋",
-                        style: TextStyle(color: Colors.white)),
+                    Text("Welcome back 👋", style: TextStyle(color: Colors.white)),
                     SizedBox(height: 6),
                     Text("Student",
                         style: TextStyle(
@@ -152,13 +163,12 @@ class _StudentHomePageState extends State<StudentHomePage> {
             ],
           ),
         ),
-
         const SizedBox(height: 26),
         const Text("Features",
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         const SizedBox(height: 12),
 
-        /// 🔍 Search Teacher
+        /// 🔍 Features Tiles
         SmartTile(
           context,
           icon: Icons.search,
@@ -174,7 +184,6 @@ class _StudentHomePageState extends State<StudentHomePage> {
             );
           },
         ),
-
         SmartTile(
           context,
           icon: Icons.location_on,
@@ -182,7 +191,6 @@ class _StudentHomePageState extends State<StudentHomePage> {
           title: "Room Search",
           subtitle: "View which rooms are free now",
         ),
-
         SmartTile(
           context,
           icon: Icons.class_,
@@ -198,8 +206,6 @@ class _StudentHomePageState extends State<StudentHomePage> {
             );
           },
         ),
-
-
         SmartTile(
           context,
           icon: Icons.calendar_month,
@@ -215,8 +221,6 @@ class _StudentHomePageState extends State<StudentHomePage> {
             );
           },
         ),
-
-
         SmartTile(
           context,
           icon: Icons.calendar_month,
@@ -236,65 +240,6 @@ class _StudentHomePageState extends State<StudentHomePage> {
     );
   }
 
-
-  /// Teacher Profile Page
-  Widget _teacherProfilePage() {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Teacher Profile")),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          elevation: 5,
-          child: ListTile(
-            leading: const CircleAvatar(
-              backgroundImage: NetworkImage('https://example.com/teacher.jpg'),
-            ),
-            title: const Text('Akhi Roy'),
-            subtitle: const Text('Math Teacher'),
-            trailing: IconButton(
-              icon: const Icon(Icons.edit),
-              onPressed: () {},
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// 🔹 Small Info Card
-  Widget _infoCard(String title, String value, IconData icon, Color color) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha((0.12 * 255).round()),
-              blurRadius: 10,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: color),
-            const SizedBox(height: 6),
-            Text(
-              value,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-            Text(
-              title,
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
   /// Snackbar
   void showSnackBar(BuildContext context, String msg) {
     ScaffoldMessenger.of(context).showSnackBar(

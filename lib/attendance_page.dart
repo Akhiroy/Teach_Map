@@ -1,166 +1,228 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:excel/excel.dart';
-import 'attendance_service.dart';
+import 'package:http/http.dart' as http;
+import 'package:csv/csv.dart';
 
 class AttendancePage extends StatefulWidget {
-  const AttendancePage({super.key});
+  final String courseName;
+  final String batch;
+  final String section;
+  final String attendanceLink;
+
+  const AttendancePage({
+    super.key,
+    required this.courseName,
+    required this.batch,
+    required this.section,
+    required this.attendanceLink,
+  });
 
   @override
   State<AttendancePage> createState() => _AttendancePageState();
 }
 
 class _AttendancePageState extends State<AttendancePage> {
-  final AttendanceService _attendanceService = AttendanceService();
-  final String docId = "attendance_today";
+  List<Map<String, dynamic>> students = [];
+  bool isLoading = true;
+  int currentIndex = 0;
 
-  final TextEditingController courseNameController = TextEditingController();
-  final TextEditingController courseCodeController = TextEditingController();
-  final TextEditingController sectionController = TextEditingController();
+  @override
+  void initState() {
+    super.initState();
+    _fetchStudentsFromLink();
+  }
+
+  Future<void> _fetchStudentsFromLink() async {
+    try {
+      if (widget.attendanceLink.isEmpty) {
+        setState(() => isLoading = false);
+        return;
+      }
+
+      final response = await http.get(Uri.parse(widget.attendanceLink));
+
+      if (response.statusCode == 200) {
+        final csvData = CsvCodec().decoder.convert(response.body);
+
+        if (csvData.length <= 1) {
+          setState(() {
+            students = [];
+            isLoading = false;
+          });
+          return;
+        }
+
+        final parsedStudents = csvData.skip(1).map((row) {
+          return {
+            "id": row[0].toString(),
+            "name": row.length > 1 ? row[1].toString() : "Unknown",
+            "present": false,
+          };
+        }).toList();
+
+        setState(() {
+          students = parsedStudents;
+          isLoading = false;
+        });
+      } else {
+        throw Exception("Failed to load students");
+      }
+    } catch (e) {
+      setState(() => isLoading = false);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    }
+  }
+
+  void _markAttendance(bool present) {
+    setState(() {
+      students[currentIndex]['present'] = present;
+
+      if (currentIndex < students.length - 1) {
+        currentIndex++;
+      } else {
+        _submitAttendance();
+      }
+    });
+  }
+
+  Future<void> _submitAttendance() async {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Attendance Completed ✅")),
+    );
+    Navigator.pop(context);
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return Scaffold(
+        backgroundColor: Colors.grey.shade100,
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (students.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text("${widget.courseName} - ${widget.batch}",
+          style: TextStyle(color: Colors.white),),
+          backgroundColor: const Color(0xFF027a9c),
+          iconTheme: const IconThemeData(
+            color: Colors.white, // 👈 Back arrow color
+          ),
+        ),
+        body: const Center(
+          child: Text(
+            "No students found!",
+            style: TextStyle(fontSize: 18),
+          ),
+        ),
+      );
+    }
+
+    final student = students[currentIndex];
+
     return Scaffold(
+      backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
-        title: const Text("Take Attendance"),
-        centerTitle: true,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
-            /// COURSE INFO
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    TextField(
-                      controller: courseNameController,
-                      decoration: const InputDecoration(labelText: "Course Name"),
-                    ),
-                    TextField(
-                      controller: courseCodeController,
-                      decoration: const InputDecoration(labelText: "Course Code"),
-                    ),
-                    TextField(
-                      controller: sectionController,
-                      decoration: const InputDecoration(labelText: "Section"),
-                    ),
-                    const SizedBox(height: 12),
-                    ElevatedButton(
-                      onPressed: _startAttendance,
-                      child: const Text("Start Attendance"),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 10),
-
-            /// EXCEL UPLOAD BUTTON
-            ElevatedButton.icon(
-              icon: const Icon(Icons.upload_file),
-              label: const Text("Upload Excel File"),
-              onPressed: _pickExcelFile,
-            ),
-
-            const SizedBox(height: 10),
-
-            /// STUDENT LIST
-            Expanded(
-              child: StreamBuilder(
-                stream: _attendanceService.getStudents(docId),
-                builder: (context, snapshot) {
-                  if (!snapshot.hasData) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  final students = snapshot.data!.docs;
-
-                  if (students.isEmpty) {
-                    return const Center(child: Text("No students found"));
-                  }
-
-                  return ListView.builder(
-                    itemCount: students.length,
-                    itemBuilder: (context, index) {
-                      final student = students[index];
-                      return ListTile(
-                        title: Text(student['name']),
-                        subtitle: Text("ID: ${student.id}"),
-                        trailing: Switch(
-                          value: student['present'],
-                          onChanged: (value) async {
-                            await _attendanceService.markStudentAttendance(
-                              docId: docId,
-                              studentId: student.id,
-                              studentName: student['name'],
-                              present: value,
-                            );
-                          },
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
+            Text(widget.courseName,style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            Text(
+              "Batch ${widget.batch} | Section ${widget.section}",
+              style: const TextStyle(fontSize: 13, color: Colors.white),
             ),
           ],
         ),
+        backgroundColor: const Color(0xFF027a9c),
+        iconTheme: const IconThemeData(
+          color: Colors.white, // 👈 Back arrow color
+        ),
+        elevation: 4,
       ),
-    );
-  }
-
-  /// START ATTENDANCE
-  Future<void> _startAttendance() async {
-    await _attendanceService.createAttendance(
-      docId: docId,
-      courseName: courseNameController.text,
-      courseCode: courseCodeController.text,
-      teacherEmail: "teacher@gmail.com",
-      date: DateTime.now().toString(),
-    );
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Attendance started successfully")),
-    );
-  }
-
-  /// PICK & READ EXCEL FILE
-  Future<void> _pickExcelFile() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['xlsx'],
-    );
-
-    if (result == null) return;
-
-    final file = File(result.files.single.path!);
-    final bytes = file.readAsBytesSync();
-    final excel = Excel.decodeBytes(bytes);
-
-    for (var table in excel.tables.keys) {
-      for (var row in excel.tables[table]!.rows.skip(1)) {
-        final id = row[0]?.value.toString();
-        final name = row[1]?.value.toString();
-
-        if (id != null && name != null) {
-          await _attendanceService.markStudentAttendance(
-            docId: docId,
-            studentId: id,
-            studentName: name,
-            present: false,
-          );
-        }
-      }
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Excel students imported successfully")),
+      body: GestureDetector(
+        onPanEnd: (details) {
+          if (details.velocity.pixelsPerSecond.dx > 0) {
+            _markAttendance(false);
+          } else {
+            _markAttendance(true);
+          }
+        },
+        child: Center(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            margin: const EdgeInsets.all(25),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF027a9c), Color(0xFF04a5c9)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(25),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.15),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Container(
+              height: 320,
+              padding: const EdgeInsets.all(25),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.person,
+                    size: 60,
+                    color: Colors.white,
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    student['name'],
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 25),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 10, horizontal: 20),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: const Text(
+                      "Swipe Left → Present\nSwipe Right → Absent",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  Text(
+                    "Student ${currentIndex + 1} of ${students.length}",
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

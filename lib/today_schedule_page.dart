@@ -1,18 +1,9 @@
 import 'dart:async';
-import 'package:badges/badges.dart' as badges;
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
-import 'package:teachmap/profile_page.dart';
-import 'package:teachmap/profile_update_page.dart';
-import 'package:teachmap/upload_routine_page.dart';
-import 'package:teachmap/weekly_timetable_page.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
-
-import 'attendance_list_page.dart';
-import 'login_page.dart';
 import 'notification_model.dart';
 import 'notification_page.dart';
 import 'notification_service.dart';
@@ -53,6 +44,56 @@ class _TodaySchedulePageState extends State<TodaySchedulePage> {
     "thursday": "739024824",
     "friday": "307287901",
   };
+  Color getCellColor(String headerTime) {
+    try {
+      final now = DateTime.now();
+
+      if (!headerTime.contains("-")) {
+        return Colors.transparent;
+      }
+
+      final parts = headerTime.split("-");
+
+      String startPart = parts[0].trim(); // 9:00
+      String endPart = parts[1].trim();   // 9:55 AM
+
+      // Extract AM/PM from end time
+      String period = endPart.contains("AM") ? "AM" : "PM";
+
+      // Add AM/PM to start time
+      if (!startPart.contains("AM") && !startPart.contains("PM")) {
+        startPart = "$startPart $period";
+      }
+
+      DateTime startTime =
+      DateFormat("h:mm a").parse(startPart);
+      DateTime endTime =
+      DateFormat("h:mm a").parse(endPart);
+
+      startTime = DateTime(
+          now.year,
+          now.month,
+          now.day,
+          startTime.hour,
+          startTime.minute);
+
+      endTime = DateTime(
+          now.year,
+          now.month,
+          now.day,
+          endTime.hour,
+          endTime.minute);
+
+      if (now.isAfter(startTime) &&
+          now.isBefore(endTime)) {
+        return Colors.amber.shade300;
+      }
+    } catch (e) {
+      return Colors.transparent;
+    }
+
+    return Colors.transparent;
+  }
 
   @override
   void initState() {
@@ -285,17 +326,44 @@ class _TodaySchedulePageState extends State<TodaySchedulePage> {
   List<List<String>> getTeacherRoutine() {
     if (todayRoutine.isEmpty || selectedAcronym == null) return [];
 
-    // Real header is row index 3
-    List<String> header = todayRoutine[3];
+    // 🔍 Find header row dynamically (row containing "Batch")
+    int headerIndex = todayRoutine.indexWhere((row) =>
+        row.any((cell) => cell.toLowerCase().contains("batch")));
 
+    if (headerIndex == -1) return [];
+
+    List<String> header = todayRoutine[headerIndex];
     List<List<String>> filtered = [header];
 
-    for (int i = 4; i < todayRoutine.length; i++) {
+    for (int i = headerIndex + 1; i < todayRoutine.length; i++) {
       final row = todayRoutine[i];
-      // Only include row if any cell contains teacher acronym
-      if (row.any((cell) =>
-          cell.toLowerCase().contains(selectedAcronym!.toLowerCase()))) {
-        filtered.add(row);
+
+      if (row.length < 2) continue;
+
+      List<String> newRow = [];
+
+      bool hasClass = false;
+
+      for (int j = 0; j < header.length; j++) {
+        String cell = j < row.length ? row[j] : "";
+
+        if (j == 0 || j == 1) {
+          // ✅ Always keep Batch & Section
+          newRow.add(cell);
+        } else {
+          if (cell
+              .toLowerCase()
+              .contains(selectedAcronym!.toLowerCase())) {
+            newRow.add(cell);
+            hasClass = true;
+          } else {
+            newRow.add("");
+          }
+        }
+      }
+
+      if (hasClass) {
+        filtered.add(newRow);
       }
     }
 
@@ -440,24 +508,52 @@ class _TodaySchedulePageState extends State<TodaySchedulePage> {
                         child: SingleChildScrollView(
                           scrollDirection: Axis.vertical,
                           child: DataTable(
-                            headingRowColor: MaterialStateProperty.all(Colors.blue.shade100),
+                            headingRowColor:
+                            MaterialStateProperty.all(Colors.blue.shade100),
                             border: TableBorder.all(color: Colors.grey.shade300),
-                            columns: teacherRoutine[0]
-                                .map((header) => DataColumn(
-                              label: Text(
-                                header,
-                                style: const TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ))
-                                .toList(),
-                            rows: teacherRoutine
-                                .sublist(1)
+
+                            columns: teacherRoutine.isNotEmpty
+                                ? teacherRoutine[0]
                                 .map(
-                                  (row) => DataRow(
-                                cells: row.map((cell) => DataCell(Text(cell))).toList(),
+                                  (header) => DataColumn(
+                                label: Text(
+                                  header,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold),
+                                ),
                               ),
                             )
-                                .toList(),
+                                .toList()
+                                : [],
+
+                            rows: teacherRoutine.length > 1
+                                ? teacherRoutine
+                                .skip(1)
+                                .map(
+                                  (row) => DataRow(
+                                cells: List.generate(
+                                  teacherRoutine[0].length,
+                                      (index) {
+                                    String cellText =
+                                    index < row.length ? row[index] : "";
+
+                                    return DataCell(
+                                      Container(
+                                        padding:
+                                        const EdgeInsets.all(8),
+                                        color: index >= 2
+                                            ? getCellColor(
+                                            teacherRoutine[0][index])
+                                            : Colors.transparent,
+                                        child: Text(cellText),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            )
+                                .toList()
+                                : [],
                           ),
                         ),
                       ),

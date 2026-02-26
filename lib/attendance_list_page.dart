@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'attendance_page.dart';
+
 class AttendanceListPage extends StatelessWidget {
   const AttendanceListPage({super.key});
-
 
   Future<void> _openAttendanceLink(
       BuildContext context, String link) async {
@@ -28,56 +29,54 @@ class AttendanceListPage extends StatelessWidget {
   }
 
   void _showEditDialog(
-    BuildContext context,
-    String docId,
-    Map<String, dynamic> data,
-  ) {
+      BuildContext context,
+      String docId,
+      Map<String, dynamic> data,
+      ) {
     final courseController =
-        TextEditingController(text: data['courseName']);
+    TextEditingController(text: data['courseName']);
     final batchController =
-        TextEditingController(text: data['batch']);
+    TextEditingController(text: data['batch']);
     final sectionController =
-        TextEditingController(text: data['section']);
+    TextEditingController(text: data['section']);
     final linkController =
-        TextEditingController(text: data['attendanceLink']);
+    TextEditingController(text: data['attendanceLink']);
 
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text("Edit Attendance Info"),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
+        ),
+        title: const Text("Edit Attendance Session"),
         content: SingleChildScrollView(
           child: Column(
             children: [
-              TextField(
-                controller: courseController,
-                decoration:
-                    const InputDecoration(labelText: "Course Name"),
-              ),
-              TextField(
-                controller: batchController,
-                decoration:
-                    const InputDecoration(labelText: "Batch"),
-              ),
-              TextField(
-                controller: sectionController,
-                decoration:
-                    const InputDecoration(labelText: "Section"),
-              ),
-              TextField(
-                controller: linkController,
-                decoration: const InputDecoration(
-                  labelText: "Attendance Sheet Link",
-                ),
-              ),
+              _styledField(courseController, "Course Name"),
+              _styledField(batchController, "Batch"),
+              _styledField(sectionController, "Section"),
+              _styledField(linkController, "Attendance Sheet Link"),
             ],
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
-          ),
+          // TextButton(
+          //   onPressed: () => Navigator.pop(context),
+          //   child: const Text("Cancel"),
+          // ),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Color(0xFFf45648),
+            ),
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel",
+                style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold)),
+          ),
+          SizedBox(height: 7,),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Color(0xFFf45648),
+            ),
             onPressed: () async {
               await FirebaseFirestore.instance
                   .collection('attendance_sessions')
@@ -90,9 +89,28 @@ class AttendanceListPage extends StatelessWidget {
               });
               Navigator.pop(context);
             },
-            child: const Text("Save"),
+            child: const Text("Save",
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ],
+      ),
+    );
+  }
+
+  static Widget _styledField(
+      TextEditingController controller, String label) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: TextField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: label,
+          filled: true,
+          fillColor: Colors.grey.shade100,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
       ),
     );
   }
@@ -100,12 +118,16 @@ class AttendanceListPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
-        title: const Text("Take Attendance"),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+        title: const Text("Take Attendance",
+        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 24),),
+        backgroundColor: Color(0xFFf45648),
+        iconTheme: const IconThemeData(
+          color: Colors.white, // 👈 Back arrow color
         ),
+        centerTitle: true,
+        elevation: 3,
       ),
       body: Column(
         children: [
@@ -130,47 +152,83 @@ class AttendanceListPage extends StatelessWidget {
                 }
 
                 return ListView.builder(
+                  padding: const EdgeInsets.all(8),
                   itemCount: docs.length,
                   itemBuilder: (context, index) {
                     final data =
-                        docs[index].data() as Map<String, dynamic>;
+                    docs[index].data() as Map<String, dynamic>;
 
                     return Card(
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
                       margin: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
+                        vertical: 8,
+                        horizontal: 6,
                       ),
                       child: ListTile(
+                        contentPadding: const EdgeInsets.all(16),
                         title: Text(
-                          data['courseName'],
+                          data['courseName'] ?? '',
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
+                            fontSize: 16,
                           ),
                         ),
-                        subtitle: Column(
-                          crossAxisAlignment:
-                              CrossAxisAlignment.start,
-                          children: [
-                            Text("Batch: ${data['batch']}"),
-                            Text("Section: ${data['section']}"),
-                          ],
+                        subtitle: Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: Column(
+                            crossAxisAlignment:
+                            CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Batch: ${data['batch'] ?? ''}",
+                                style: const TextStyle(
+                                    color: Colors.black87),
+                              ),
+                              Text(
+                                "Section: ${data['section'] ?? ''}",
+                                style: const TextStyle(
+                                    color: Colors.black87),
+                              ),
+                            ],
+                          ),
+                        ),
+                        trailing: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.indigo.shade50,
+                            borderRadius:
+                            BorderRadius.circular(10),
+                          ),
+                          child: IconButton(
+                            icon: const Icon(Icons.edit,
+                                color: Color(0xFFf45648)),
+                            onPressed: () {
+                              _showEditDialog(
+                                context,
+                                docs[index].id,
+                                data,
+                              );
+                            },
+                          ),
                         ),
                         onTap: () {
-                          _openAttendanceLink(
+                          Navigator.push(
                             context,
-                            data['attendanceLink'],
+                            MaterialPageRoute(
+                              builder: (_) => AttendancePage(
+                                courseName:
+                                data['courseName'] ?? '',
+                                batch: data['batch'] ?? '',
+                                section:
+                                data['section'] ?? '',
+                                attendanceLink:
+                                data['attendanceLink'] ?? '',
+                              ),
+                            ),
                           );
                         },
-                        trailing: IconButton(
-                          icon: const Icon(Icons.edit),
-                          onPressed: () {
-                            _showEditDialog(
-                              context,
-                              docs[index].id,
-                              data,
-                            );
-                          },
-                        ),
                       ),
                     );
                   },
@@ -178,8 +236,8 @@ class AttendanceListPage extends StatelessWidget {
               },
             ),
           ),
-          const Divider(),
-          _AddAttendanceSection(),
+          const Divider(thickness: 1.2),
+          const _AddAttendanceSection(),
         ],
       ),
     );
@@ -187,6 +245,7 @@ class AttendanceListPage extends StatelessWidget {
 }
 
 class _AddAttendanceSection extends StatefulWidget {
+  const _AddAttendanceSection();
 
   @override
   State<_AddAttendanceSection> createState() =>
@@ -200,58 +259,89 @@ class _AddAttendanceSectionState
   final sectionController = TextEditingController();
   final linkController = TextEditingController();
 
+  Widget _styledField(
+      TextEditingController controller, String label) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: TextField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: label,
+          filled: true,
+          fillColor: Colors.grey.shade100,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(12),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            blurRadius: 8,
+            color: Colors.black.withOpacity(0.05),
+            offset: const Offset(0, -2),
+          )
+        ],
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(20),
+        ),
+      ),
+      padding: const EdgeInsets.all(16),
       child: Column(
         children: [
           const Text(
             "Add Attendance Session",
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              fontSize: 16,
+              fontSize: 17,
+              color: Color(0xFFf45648),
             ),
           ),
-          TextField(
-            controller: courseController,
-            decoration:
-                const InputDecoration(labelText: "Course Name"),
-          ),
-          TextField(
-            controller: batchController,
-            decoration:
-                const InputDecoration(labelText: "Batch"),
-          ),
-          TextField(
-            controller: sectionController,
-            decoration:
-                const InputDecoration(labelText: "Section"),
-          ),
-          TextField(
-            controller: linkController,
-            decoration: const InputDecoration(
-              labelText: "Attendance Sheet Link",
-            ),
-          ),
-          const SizedBox(height: 8),
-          ElevatedButton(
-            onPressed: () async {
-              await FirebaseFirestore.instance
-                  .collection('attendance_sessions')
-                  .add({
-                'courseName': courseController.text,
-                'batch': batchController.text,
-                'section': sectionController.text,
-                'attendanceLink': linkController.text,
-              });
+          const SizedBox(height: 10),
+          _styledField(courseController, "Course Name"),
+          _styledField(batchController, "Batch"),
+          _styledField(sectionController, "Section"),
+          _styledField(linkController, "Attendance Sheet Link"),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                padding:
+                const EdgeInsets.symmetric(vertical: 14),
+                backgroundColor: Color(0xFFf45648),
+                shape: RoundedRectangleBorder(
+                  borderRadius:
+                  BorderRadius.circular(12),
+                ),
+              ),
+              onPressed: () async {
+                await FirebaseFirestore.instance
+                    .collection('attendance_sessions')
+                    .add({
+                  'courseName': courseController.text,
+                  'batch': batchController.text,
+                  'section': sectionController.text,
+                  'attendanceLink': linkController.text,
+                });
 
-              courseController.clear();
-              batchController.clear();
-              sectionController.clear();
-              linkController.clear();
-            },
-            child: const Text("Add"),
+                courseController.clear();
+                batchController.clear();
+                sectionController.clear();
+                linkController.clear();
+              },
+              child: const Text(
+                "Add Session",
+                style: TextStyle(fontSize: 16,color: Colors.white),
+              ),
+            ),
           ),
         ],
       ),

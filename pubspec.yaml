@@ -56,15 +56,7 @@ dependencies:
   csv: ^7.1.0
   excel: ^2.1.0
   flutter_local_notifications: ^17.2.3
-  file_picker:
-    version: ^6.1.7
-    # only for mobile
-    platforms:
-      android: true
-      ios: true
-      macos: false
-      windows: false
-      linux: false
+
 
 
 
