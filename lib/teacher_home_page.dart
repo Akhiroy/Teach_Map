@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:teachmap/class_routine_upload%20_student.dart';
 import 'package:teachmap/today_schedule_page.dart';
+import 'package:teachmap/weekly_timetable_page.dart';
 import 'attendance_list_page.dart';
 import 'notification_model.dart';
 import 'notification_page.dart';
-import 'profile_update_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'login_page.dart';
 import 'package:badges/badges.dart' as badges;
@@ -178,16 +178,15 @@ class _TeacherHomePageState extends State<TeacherHomePage> {
                 children: [
 
                   _featureCard(
-                    Icons.person,
-                    "Update Profile",
-                    const Color(0xFF4CAF50),
-                    "Edit name, department, info",
+                    Icons.calendar_month,
+                    "Weekly Timetable",
+                    Color(0xFF009688),
+                    "View weekly schedule",
                         () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) =>
-                          const ProfileUpdatePage(),
+                          builder: (context) => const WeeklyTimetablePage(),
                         ),
                       );
                     },
@@ -335,17 +334,4 @@ class _TeacherHomePageState extends State<TeacherHomePage> {
   }
 }
 
-              // _featureCard(
-              //   Icons.calendar_month,
-              //   "Weekly Timetable",
-              //   Color(0xFF009688),
-              //   "View weekly schedule",
-              //       () {
-              //     Navigator.push(
-              //       context,
-              //       MaterialPageRoute(
-              //         builder: (context) => const WeeklyTimetablePage(),
-              //       ),
-              //     );
-              //   },
-             // ),
+

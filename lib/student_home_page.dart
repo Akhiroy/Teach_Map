@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart' hide Badge;
 import 'package:teachmap/profile_page.dart';
-import 'package:teachmap/student_routine_page.dart';
+import 'package:teachmap/room_search_page.dart';
+import 'package:teachmap/student_weekly_timetable_page.dart';
 import 'package:teachmap/widget/smart_tile.dart';
 import '_batch_routine_page.dart';
 import 'class_routine_upload _student.dart';
@@ -48,10 +49,7 @@ class _StudentHomePageState extends State<StudentHomePage> {
           setState(() {
             _currentIndex = index;
           });
-
           if (index == 1) {
-            showSnackBar(context, "Notifications coming soon 🚧");
-          } else if (index == 2) {
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -64,16 +62,6 @@ class _StudentHomePageState extends State<StudentHomePage> {
           const BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: "Home",
-          ),
-          BottomNavigationBarItem(
-            icon: Badge(
-              badgeContent: const Text(
-                '3',
-                style: TextStyle(color: Colors.white, fontSize: 10),
-              ),
-              child: const Icon(Icons.notifications),
-            ),
-            label: "Notifications",
           ),
           const BottomNavigationBarItem(
             icon: Icon(Icons.person),
@@ -116,7 +104,7 @@ class _StudentHomePageState extends State<StudentHomePage> {
       children: [
 
 
-        /// 🔹 Welcome Card
+        /// Welcome Card
         Container(
           padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
@@ -184,13 +172,7 @@ class _StudentHomePageState extends State<StudentHomePage> {
             );
           },
         ),
-        SmartTile(
-          context,
-          icon: Icons.location_on,
-          color: Colors.red,
-          title: "Room Search",
-          subtitle: "View which rooms are free now",
-        ),
+
         SmartTile(
           context,
           icon: Icons.class_,
@@ -209,14 +191,14 @@ class _StudentHomePageState extends State<StudentHomePage> {
         SmartTile(
           context,
           icon: Icons.calendar_month,
-          color: Colors.purple,
+          color: Colors.deepPurple,
           title: "Weekly Timetable",
           subtitle: "View Batch wise weekly class schedule",
           onTap: () {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => const StudentRoutinePage(),
+                builder: (_) => const StudentWeeklyTimetablePage(),
               ),
             );
           },

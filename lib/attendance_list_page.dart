@@ -28,6 +28,57 @@ class AttendanceListPage extends StatelessWidget {
     }
   }
 
+  void _showDeleteDialog(
+      BuildContext context,
+      String docId,
+      ) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
+        ),
+        title: const Text("Delete Session"),
+        content: const Text(
+            "Are you sure you want to delete this attendance session?"),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel",
+                style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold)),
+          ),
+          SizedBox(height: 7,),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            onPressed: () async {
+              await FirebaseFirestore.instance
+                  .collection('attendance_sessions')
+                  .doc(docId)
+                  .delete();
+
+              Navigator.pop(context);
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("Attendance session deleted"),
+                ),
+              );
+            },
+            child: const Text(
+              "Delete",
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showEditDialog(
       BuildContext context,
       String docId,
@@ -66,7 +117,7 @@ class AttendanceListPage extends StatelessWidget {
           // ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFFf45648),
+              backgroundColor: Colors.red,
             ),
             onPressed: () => Navigator.pop(context),
             child: const Text("Cancel",
@@ -75,7 +126,7 @@ class AttendanceListPage extends StatelessWidget {
           SizedBox(height: 7,),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFFf45648),
+              backgroundColor: Colors.red,
             ),
             onPressed: () async {
               await FirebaseFirestore.instance
@@ -122,9 +173,9 @@ class AttendanceListPage extends StatelessWidget {
       appBar: AppBar(
         title: const Text("Take Attendance",
         style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 24),),
-        backgroundColor: Color(0xFFf45648),
+        backgroundColor: Colors.red,
         iconTheme: const IconThemeData(
-          color: Colors.white, // 👈 Back arrow color
+          color: Colors.white, //Back arrow color
         ),
         centerTitle: true,
         elevation: 3,
@@ -195,23 +246,53 @@ class AttendanceListPage extends StatelessWidget {
                             ],
                           ),
                         ),
-                        trailing: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.indigo.shade50,
-                            borderRadius:
-                            BorderRadius.circular(10),
-                          ),
-                          child: IconButton(
-                            icon: const Icon(Icons.edit,
-                                color: Color(0xFFf45648)),
-                            onPressed: () {
-                              _showEditDialog(
-                                context,
-                                docs[index].id,
-                                data,
-                              );
-                            },
-                          ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+
+                            /// ✏ Edit Button
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.indigo.shade50,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: IconButton(
+                                icon: const Icon(
+                                  Icons.edit,
+                                  color: Colors.red,
+                                ),
+                                onPressed: () {
+                                  _showEditDialog(
+                                    context,
+                                    docs[index].id,
+                                    data,
+                                  );
+                                },
+                              ),
+                            ),
+
+                            const SizedBox(width: 6),
+
+                            /// 🗑 Delete Button
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.indigo.shade50,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: IconButton(
+                                icon: const Icon(
+                                  Icons.delete,
+                                  color: Colors.red,
+                                ),
+                                onPressed: () {
+                                  _showDeleteDialog(
+                                    context,
+                                    docs[index].id,
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
                         ),
                         onTap: () {
                           Navigator.push(
@@ -301,7 +382,7 @@ class _AddAttendanceSectionState
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 17,
-              color: Color(0xFFf45648),
+              color: Colors.red,
             ),
           ),
           const SizedBox(height: 10),
@@ -316,7 +397,7 @@ class _AddAttendanceSectionState
               style: ElevatedButton.styleFrom(
                 padding:
                 const EdgeInsets.symmetric(vertical: 14),
-                backgroundColor: Color(0xFFf45648),
+                backgroundColor: Colors.red,
                 shape: RoundedRectangleBorder(
                   borderRadius:
                   BorderRadius.circular(12),

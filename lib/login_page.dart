@@ -51,7 +51,7 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     try {
-      // 🔐 Firebase Authentication Sign In
+      // Firebase Authentication Sign In
       UserCredential userCredential =
       await _auth.signInWithEmailAndPassword(
         email: email,
@@ -62,7 +62,7 @@ class _LoginPageState extends State<LoginPage> {
 
       if (user != null) {
         // 📩 Check Email Verification
-        await user.reload();          // 🔥 refresh user from Firebase
+        await user.reload();          // refresh user from Firebase
         user = _auth.currentUser;     // get updated user
 
         if (!user!.emailVerified) {

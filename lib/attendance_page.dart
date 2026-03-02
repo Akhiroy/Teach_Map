@@ -1,6 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:csv/csv.dart';
+
+import 'attendance_summary_page.dart';
 
 class AttendancePage extends StatefulWidget {
   final String courseName;
@@ -24,6 +28,7 @@ class _AttendancePageState extends State<AttendancePage> {
   List<Map<String, dynamic>> students = [];
   bool isLoading = true;
   int currentIndex = 0;
+  List<int> historyStack = [];
 
   @override
   void initState() {
@@ -75,16 +80,61 @@ class _AttendancePageState extends State<AttendancePage> {
     }
   }
 
-  void _markAttendance(bool present) {
+  void _markAttendance(bool present) async {
     setState(() {
       students[currentIndex]['present'] = present;
-
-      if (currentIndex < students.length - 1) {
-        currentIndex++;
-      } else {
-        _submitAttendance();
-      }
+      historyStack.add(currentIndex);
     });
+
+    await _saveToGoogleSheet(students[currentIndex]);
+
+    if (currentIndex < students.length - 1) {
+      setState(() => currentIndex++);
+    } else {
+      _goToSummaryPage();
+    }
+  }
+
+  void _goToSummaryPage() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) =>
+            AttendanceSummaryPage(students: students),
+      ),
+    );
+  }
+  Future<void> _saveToGoogleSheet(Map student) async {
+    const scriptUrl = "https://script.google.com/home/projects/1jiYX3Q7wITo6tqa-p59Am0h2pJfFiRw9elIR9ZGeqPwd-iB6vTnQV8Y9/edit";
+    final now = DateTime.now();
+
+    final formattedDate =
+        "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+
+    final dayName = [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday"
+    ][now.weekday - 1];
+
+    await http.post(
+      Uri.parse(scriptUrl),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "date": formattedDate,
+        "day": dayName,
+        "course": widget.courseName,
+        "batch": widget.batch,
+        "section": widget.section,
+        "studentId": student['id'],
+        "studentName": student['name'],
+        "status": student['present'] ? "Present" : "Absent",
+      }),
+    );
   }
 
   Future<void> _submitAttendance() async {
@@ -130,7 +180,9 @@ class _AttendancePageState extends State<AttendancePage> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(widget.courseName,style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            Text(widget.courseName,
+                style: const TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold)),
             Text(
               "Batch ${widget.batch} | Section ${widget.section}",
               style: const TextStyle(fontSize: 13, color: Colors.white),
@@ -139,15 +191,35 @@ class _AttendancePageState extends State<AttendancePage> {
         ),
         backgroundColor: const Color(0xFF027a9c),
         iconTheme: const IconThemeData(
-          color: Colors.white, // 👈 Back arrow color
+          color: Colors.white, // Back arrow color
         ),
         elevation: 4,
+        actions: [
+          TextButton.icon(
+            onPressed: () {
+              // Navigate to summary page
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => AttendanceSummaryPage(students: students),
+                ),
+              );
+            },
+            icon: const Icon(Icons.list, color: Colors.white),
+            label: const Text(
+              "Summary",
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
       ),
       body: GestureDetector(
-        onPanEnd: (details) {
+        onHorizontalDragEnd: (details) {
           if (details.velocity.pixelsPerSecond.dx > 0) {
+            // Swipe Right → Absent
             _markAttendance(false);
-          } else {
+          } else if (details.velocity.pixelsPerSecond.dx < 0) {
+            // Swipe Left → Present
             _markAttendance(true);
           }
         },
@@ -182,7 +254,7 @@ class _AttendancePageState extends State<AttendancePage> {
                     size: 60,
                     color: Colors.white,
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 10),
                   Text(
                     student['name'],
                     textAlign: TextAlign.center,
@@ -192,10 +264,10 @@ class _AttendancePageState extends State<AttendancePage> {
                       color: Colors.white,
                     ),
                   ),
-                  const SizedBox(height: 25),
+                  const SizedBox(height: 15),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 10, horizontal: 20),
+                    padding:
+                    const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(15),
@@ -209,7 +281,7 @@ class _AttendancePageState extends State<AttendancePage> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 10),
                   Text(
                     "Student ${currentIndex + 1} of ${students.length}",
                     style: const TextStyle(

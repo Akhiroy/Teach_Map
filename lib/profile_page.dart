@@ -49,41 +49,6 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  /// ✅ Pick & Upload Image
-  Future<void> _pickAndUploadImage() async {
-    if (user == null) return;
-
-    try {
-      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-      if (image == null) return;
-
-      setState(() => isUploading = true);
-
-      File file = File(image.path);
-
-      final ref = FirebaseStorage.instance
-          .ref()
-          .child("teacher_profile_images")
-          .child("${user!.uid}.jpg");
-
-      await ref.putFile(file); // upload
-
-      final imageUrl = await ref.getDownloadURL();
-
-      // 🔹 Update Firestore
-      await FirebaseFirestore.instance
-          .collection("users")
-          .doc(user!.uid)
-          .update({"imageUrl": imageUrl});
-
-      setState(() => isUploading = false);
-    } catch (e) {
-      setState(() => isUploading = false);
-      print("Error uploading image: $e");
-    }
-  }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -128,9 +93,9 @@ class _ProfilePageState extends State<ProfilePage> {
           String name = data["name"] ?? "";
           String dept = data["department"] ?? "";
           String phone = data["phone"] ?? "";
-          String imageUrl = data["imageUrl"] ?? "";
           String role = data["role"] ?? "";
-          String studentId = data["id"] ?? "";
+          String studentId = data["studentId"] ?? "";
+          String shortName = data["shortName"] ?? "";
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
@@ -143,31 +108,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     CircleAvatar(
                       radius: 65,
                       backgroundColor: Colors.grey.shade300,
-                      backgroundImage: (imageUrl.isNotEmpty)
-                          ? NetworkImage(imageUrl)               // uploaded image
-                          : (user!.photoURL != null
-                          ? NetworkImage(user!.photoURL!)   // Gmail profile
-                          : null),
-                      child: (imageUrl.isEmpty && user!.photoURL == null)
-                          ? const Icon(Icons.person, size: 65, color: Colors.white)
-                          : null,
-                    ),
-
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: GestureDetector(
-                        onTap: _pickAndUploadImage,
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF027a9c),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(Icons.camera_alt,
-                              color: Colors.white, size: 20),
-                        ),
-                      ),
+                      child: Image.asset('img/profileIcon.png'),
                     ),
                   ],
                 ),
@@ -194,6 +135,12 @@ class _ProfilePageState extends State<ProfilePage> {
 
                 _profileTile("Role",
                     role.isEmpty ? "Not Added" : role),
+
+                if (role.toLowerCase() == "teacher") ...[
+                  const SizedBox(height: 15),
+                  _profileTile("Short Name",
+                      shortName.isEmpty ? "Not Added" : shortName),
+                ],
                 if (role.toLowerCase() == "student") ...[
                   const SizedBox(height: 15),
                   _profileTile("Student ID",

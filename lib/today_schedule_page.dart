@@ -393,7 +393,7 @@ class _TodaySchedulePageState extends State<TodaySchedulePage> {
           ),
         ],
         elevation: 0,
-        backgroundColor: Color(0xFF027a9c),
+        backgroundColor: Colors.deepPurple,
         iconTheme: const IconThemeData(
           color: Colors.white, // 👈 Back arrow color
         ),

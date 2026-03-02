@@ -1,9 +1,6 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ProfileUpdatePage extends StatefulWidget {
   const ProfileUpdatePage({super.key});
@@ -13,24 +10,23 @@ class ProfileUpdatePage extends StatefulWidget {
 }
 
 class _ProfileUpdatePageState extends State<ProfileUpdatePage> {
-  final User? user = FirebaseAuth.instance.currentUser;
-  final ImagePicker picker = ImagePicker();
-
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController nameController = TextEditingController();
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController departmentController = TextEditingController();
-  final TextEditingController infoController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController studentIdController = TextEditingController();
+  final TextEditingController shortNameController = TextEditingController();
+  final TextEditingController infoController = TextEditingController();
 
-  String userRole = '';
-  String imageUrl = '';
+  String userRole = "";
+  String selectedDept = "CSE";
   bool isLoading = false;
-  bool isUploading = false;
 
-  final List<String> genderOptions = ['Male', 'Female', 'Other'];
+  final RegExp nameRegex = RegExp(r'^[a-zA-Z ]{3,}$');
+  final RegExp phoneRegex = RegExp(r'^(?:\+8801|01)[3-9]\d{8}$');
+  final RegExp studentIdRegex = RegExp(r'^018\d{0,13}$');
+
+  final User? user = FirebaseAuth.instance.currentUser;
 
   @override
   void initState() {
@@ -38,112 +34,169 @@ class _ProfileUpdatePageState extends State<ProfileUpdatePage> {
     loadUserData();
   }
 
-  /// Load user data from Firestore
+  @override
+  void dispose() {
+    nameController.dispose();
+    phoneController.dispose();
+    studentIdController.dispose();
+    shortNameController.dispose();
+    infoController.dispose();
+    super.dispose();
+  }
+
+  /// Load existing user data from Firestore
   Future<void> loadUserData() async {
     if (user == null) return;
 
-    final doc = await FirebaseFirestore.instance
-        .collection("users")
-        .doc(user!.uid)
-        .get();
+    final doc = await FirebaseFirestore.instance.collection('users').doc(user!.uid).get();
+    final data = doc.data();
+    if (data == null) return;
 
-    if (doc.exists) {
-      final data = doc.data() as Map<String, dynamic>;
-      nameController.text = data['name'] ?? '';
-      emailController.text = data['email'] ?? '';
-      departmentController.text = data['department'] ?? '';
-      infoController.text = data['info'] ?? '';
-      phoneController.text = data['phone'] ?? '';
-      studentIdController.text = data['studentId'] ?? '';
-      userRole = data['role'] ?? '';
-      imageUrl = data['imageUrl'] ?? '';
-      setState(() {});
-    }
+    setState(() {
+      userRole = data['role'] ?? "";
+      nameController.text = data['name'] ?? "";
+      phoneController.text = data['phone'] ?? "";
+      studentIdController.text = data['studentId'] ?? "";
+      shortNameController.text = data['shortName'] ?? "";
+      infoController.text = data['info'] ?? "";
+      selectedDept = data['department'] ?? "CSE";
+    });
   }
 
-  /// Pick image from gallery & upload to Firebase Storage
-  Future<void> _pickAndUploadImage() async {
-    if (user == null) return;
-
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-    if (image == null) return;
-
-    setState(() => isUploading = true);
-
-    try {
-      File file = File(image.path);
-
-      final ref = FirebaseStorage.instance
-          .ref()
-          .child("profile_images")
-          .child("${user!.uid}.jpg");
-
-      // Upload file
-      await ref.putFile(file);
-
-      // Get download URL
-      final uploadedImageUrl = await ref.getDownloadURL();
-
-      // Update Firestore
-      await FirebaseFirestore.instance
-          .collection("users")
-          .doc(user!.uid)
-          .update({"imageUrl": uploadedImageUrl});
-
-      // Update local state
-      setState(() {
-        imageUrl = uploadedImageUrl;
-        isUploading = false;
-      });
-    } catch (e) {
-      setState(() => isUploading = false);
-      print("Error uploading image: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to upload image: $e")),
-      );
-    }
-  }
-
-  /// Update all user profile fields
+  /// Update profile in Firestore
   Future<void> updateProfile() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => isLoading = true);
-
     if (user == null) return;
 
-    Map<String, dynamic> updatedData = {
+    final updatedData = {
       'name': nameController.text.trim(),
-      'email': emailController.text.trim(),
-      'department': departmentController.text.trim(),
+      'department': selectedDept,
       'info': infoController.text.trim(),
       'phone': phoneController.text.trim(),
-      'imageUrl': imageUrl,
+      'imageUrl': 'img/profileIcon.png', // fixed image
     };
 
     if (userRole.toLowerCase() == 'student') {
       updatedData['studentId'] = studentIdController.text.trim();
     }
+    if (userRole.toLowerCase() == 'teacher') {
+      updatedData['shortName'] = shortNameController.text.trim();
+    }
 
-    await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user!.uid)
-        .update(updatedData);
+    await FirebaseFirestore.instance.collection('users').doc(user!.uid).update(updatedData);
 
     setState(() => isLoading = false);
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Profile Updated Successfully ✅")),
+      const SnackBar(content: Text("Profile updated successfully ✅")),
     );
 
     Navigator.pop(context);
   }
 
-  Widget _profileFieldTile({required String title, required Widget child}) {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xffF7F8FA),
+      appBar: AppBar(
+        title: const Text(
+          "Update Profile",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: const Color(0xFF027a9c),
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              /// Fixed Profile Image
+              CircleAvatar(
+                radius: 65,
+                backgroundColor: Colors.grey.shade300,
+                backgroundImage: const AssetImage('img/profileIcon.png'),
+              ),
+              const SizedBox(height: 25),
+
+              /// Name
+              _profileInputTile("Name", nameController, Icons.person,
+                  validator: (v) {
+                    if (v == null || v.isEmpty) return "Enter name";
+                    if (!nameRegex.hasMatch(v)) return "Enter valid name";
+                    return null;
+                  }),
+              const SizedBox(height: 15),
+
+              /// Student ID
+              if (userRole.toLowerCase() == 'student')
+                _profileInputTile("Student ID", studentIdController, Icons.badge,
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return "Enter ID";
+                      if (!studentIdRegex.hasMatch(v)) return "ID must start with 018";
+                      return null;
+                    }),
+              if (userRole.toLowerCase() == 'student') const SizedBox(height: 15),
+
+              /// Short Name
+              if (userRole.toLowerCase() == 'teacher')
+                _profileInputTile("Short Name", shortNameController, Icons.short_text,
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return "Enter short name";
+                      if (v.length < 2) return "Too short";
+                      return null;
+                    }),
+              if (userRole.toLowerCase() == 'teacher') const SizedBox(height: 15),
+
+              /// Department Dropdown
+              _departmentTile(),
+              const SizedBox(height: 15),
+
+              /// Phone
+              _profileInputTile("Phone", phoneController, Icons.phone,
+                  keyboardType: TextInputType.phone, validator: (v) {
+                    if (v == null || v.isEmpty) return null;
+                    if (!phoneRegex.hasMatch(v)) return "Enter valid phone";
+                    return null;
+                  }),
+              const SizedBox(height: 25),
+
+              /// Save Button
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: isLoading ? null : updateProfile,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF027a9c),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text("Save Changes",
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Department dropdown styled like _profileInputTile
+  Widget _departmentTile() {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
-      margin: const EdgeInsets.symmetric(vertical: 6),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
@@ -158,191 +211,76 @@ class _ProfileUpdatePageState extends State<ProfileUpdatePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title,
-              style: const TextStyle(
-                  fontWeight: FontWeight.bold, color: Colors.black54)),
+          const Text(
+            "Department",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.black54,
+            ),
+          ),
           const SizedBox(height: 5),
-          child,
+          DropdownButtonFormField<String>(
+            value: selectedDept,
+            decoration: InputDecoration(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              filled: true,
+              fillColor: Colors.grey.shade100,
+            ),
+            items: const [
+              DropdownMenuItem(value: "CSE", child: Text("CSE")),
+              DropdownMenuItem(value: "EEE", child: Text("EEE")),
+              DropdownMenuItem(value: "LAW", child: Text("LAW")),
+              DropdownMenuItem(value: "CIVIL", child: Text("CIVIL")),
+              DropdownMenuItem(value: "ENGLISH", child: Text("ENGLISH")),
+            ],
+            onChanged: (value) => setState(() => selectedDept = value!),
+          ),
         ],
       ),
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    if (user == null) {
-      return const Scaffold(
-        body: Center(child: Text("No user logged in")),
-      );
-    }
-
-    return Scaffold(
-      backgroundColor: const Color(0xffF7F8FA),
-      appBar: AppBar(
-        title: const Text(
-          "Edit Profile",
-          style: TextStyle(
-              color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: const Color(0xFF4CAF50),
-        centerTitle: true,
-        iconTheme: const IconThemeData(
-          color: Colors.white,
-        ),
+  /// Input field tile
+  Widget _profileInputTile(String title, TextEditingController controller, IconData icon,
+      {TextInputType keyboardType = TextInputType.text, String? Function(String?)? validator}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 6, offset: const Offset(0, 3))],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              /// PROFILE IMAGE
-              Stack(
-                children: [
-                  CircleAvatar(
-                    radius: 65,
-                    backgroundColor: Colors.grey.shade300,
-                    backgroundImage:
-                    imageUrl.isNotEmpty ? NetworkImage(imageUrl) : null,
-                    child: imageUrl.isEmpty
-                        ? const Icon(Icons.person, size: 65, color: Colors.white)
-                        : null,
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: GestureDetector(
-                      onTap: _pickAndUploadImage,
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF027a9c),
-                          shape: BoxShape.circle,
-                        ),
-                        child: isUploading
-                            ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                            : const Icon(Icons.camera_alt,
-                            color: Colors.white, size: 20),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 25),
-
-              /// NAME
-              _profileFieldTile(
-                title: "Full Name",
-                child: TextFormField(
-                  controller: nameController,
-                  decoration: const InputDecoration(
-                    hintText: "Enter full name",
-                    border: InputBorder.none,
-                  ),
-                  validator: (value) => value!.isEmpty ? "Enter name" : null,
-                ),
-              ),
-
-              /// EMAIL
-              _profileFieldTile(
-                title: "Email",
-                child: TextFormField(
-                  controller: emailController,
-                  decoration: const InputDecoration(
-                    hintText: "Enter email",
-                    border: InputBorder.none,
-                  ),
-                  validator: (value) => value!.isEmpty ? "Enter email" : null,
-                ),
-              ),
-
-              /// DEPARTMENT
-              _profileFieldTile(
-                title: "Department",
-                child: TextFormField(
-                  controller: departmentController,
-                  decoration: const InputDecoration(
-                    hintText: "Enter department",
-                    border: InputBorder.none,
-                  ),
-                ),
-              ),
-              /// STUDENT ID (if student)
-              if (userRole.toLowerCase() == 'student') ...[
-                _profileFieldTile(
-                  title: "Student ID",
-                  child: TextFormField(
-                    controller: studentIdController,
-                    decoration: const InputDecoration(
-                      hintText: "Enter student ID",
-                      border: InputBorder.none,
-                    ),
-                    validator: (value) =>
-                    value!.isEmpty ? "Enter student ID" : null,
-                  ),
-                ),
-              ],
-
-              /// PHONE
-              _profileFieldTile(
-                title: "Phone",
-                child: TextFormField(
-                  controller: phoneController,
-                  keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(
-                    hintText: "Enter phone",
-                    border: InputBorder.none,
-                  ),
-                ),
-              ),
-
-              /// ADDITIONAL INFO
-              _profileFieldTile(
-                title: "Additional Info",
-                child: TextFormField(
-                  controller: infoController,
-                  maxLines: 3,
-                  decoration: const InputDecoration(
-                    hintText: "Enter additional info",
-                    border: InputBorder.none,
-                  ),
-                ),
-              ),
-
-
-              const SizedBox(height: 25),
-
-              /// SAVE BUTTON
-              isLoading
-                  ? const CircularProgressIndicator()
-                  : SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton.icon(
-                  icon: const Icon(Icons.save, color: Colors.white),
-                  label: const Text(
-                    "Save Changes",
-                    style: TextStyle(fontSize: 18, color: Colors.white),
-                  ),
-                  onPressed: updateProfile,
-                  style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    backgroundColor: const Color(0xFF4CAF50),
-                  ),
-                ),
-              ),
-            ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title,
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold, color: Colors.black54)),
+          const SizedBox(height: 5),
+          TextFormField(
+            controller: controller,
+            keyboardType: keyboardType,
+            validator: validator,
+            decoration: _inputDecoration(icon), // only icon, no labelText
           ),
-        ),
+        ],
+      ),
+    );
+  }
+
+  InputDecoration _inputDecoration(IconData icon) {
+    return InputDecoration(
+      prefixIcon: Icon(icon),
+      filled: true,
+      fillColor: Colors.grey.shade100,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide.none,
       ),
     );
   }
