@@ -1,6 +1,8 @@
-import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
 
 class AttendanceSummaryPage extends StatefulWidget {
   final List<Map<String, dynamic>> students;
@@ -28,29 +30,62 @@ class _AttendanceSummaryPageState extends State<AttendanceSummaryPage> {
       _isLoading = true;
     });
 
-    final data = widget.students
-        .map((s) => {'name': s['name'], 'present': s['present']})
-        .toList();
-
-    // ✅ Your Google Apps Script Web App URL
-    const String url = 'https://script.google.com/macros/s/AKfycbz0VwsVCWLCDECt468TjZAVda4uJ72itqpIk7zkcVGDayTG4Lz1Q3lYrKWYaOCI01ns/exec';
-
     try {
-      final response = await http.post(
-        Uri.parse(url),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(data),
+      final user = FirebaseAuth.instance.currentUser;
+
+      final presentCount =
+          widget.students.where((s) => s['present'] == true).length;
+
+      final absentCount =
+          widget.students.where((s) => s['present'] == false).length;
+
+
+      // SAVE TO FIRESTORE
+
+      final attendanceData = {
+        "teacherId": user?.uid,
+        "date": Timestamp.now(),
+        "presentCount": presentCount,
+        "absentCount": absentCount,
+        "students": widget.students.map((s) {
+          return {
+            "id": s['id'],
+            "name": s['name'],
+            "present": s['present'],
+          };
+        }).toList(),
+      };
+
+      await FirebaseFirestore.instance
+          .collection("attendancelink")
+          .add(attendanceData);
+
+
+      // SAVE TO GOOGLE SHEET
+
+      const String sheetUrl =
+          'https://script.google.com/macros/s/AKfycbz0VwsVCWLCDECt468TjZAVda4uJ72itqpIk7zkcVGDayTG4Lz1Q3lYrKWYaOCI01ns/exec';
+
+      final sheetData = widget.students.map((s) {
+        return {
+          "id": s['id'],
+          "name": s['name'],
+          "status": s['present'] ? "Present" : "Absent",
+          "date": DateTime.now().toString(),
+        };
+      }).toList();
+
+      await http.post(
+        Uri.parse(sheetUrl),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(sheetData),
       );
 
-      if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Attendance updated successfully!")),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to update: ${response.body}")),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Attendance saved to Firestore & Google Sheet!"),
+        ),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error: $e")),
@@ -59,7 +94,8 @@ class _AttendanceSummaryPageState extends State<AttendanceSummaryPage> {
       setState(() {
         _isLoading = false;
       });
-      Navigator.pop(context); // Go back after submission
+
+      Navigator.pop(context);
       Navigator.pop(context);
     }
   }

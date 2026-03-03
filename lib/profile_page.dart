@@ -1,8 +1,6 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:teachmap/profile_update_page.dart';
 
@@ -24,7 +22,7 @@ class _ProfilePageState extends State<ProfilePage> {
     _createTeacherIfNotExists();
   }
 
-  /// ✅ Auto create teacher document if not exists
+  /// Auto create teacher document if not exists
   Future<void> _createTeacherIfNotExists() async {
     if (user == null) return;
 
@@ -75,7 +73,7 @@ class _ProfilePageState extends State<ProfilePage> {
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
             .collection("users")
-            .doc(user!.uid) // must match uploaded image doc
+            .doc(user!.uid)
             .snapshots(),
         builder: (context, snapshot) {
 

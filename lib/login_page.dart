@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
 import 'register_page.dart';
 import 'student_home_page.dart';
 import 'teacher_home_page.dart';
@@ -21,14 +20,14 @@ class _LoginPageState extends State<LoginPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
 
-  // 👁️ show / hide password state
+  // show / hide password state
   bool _obscurePassword = true;
 
-  // ✅ Email regex
+  // Email regex
   final RegExp emailRegex =
       RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
 
-  // ✅ Password regex
+  // Password regex
   final RegExp passwordRegex =
       RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$');
 
@@ -61,9 +60,9 @@ class _LoginPageState extends State<LoginPage> {
       User? user = userCredential.user;
 
       if (user != null) {
-        // 📩 Check Email Verification
-        await user.reload();          // refresh user from Firebase
-        user = _auth.currentUser;     // get updated user
+        // Check Email Verification
+        await user.reload();
+        user = _auth.currentUser;
 
         if (!user!.emailVerified) {
           await user.sendEmailVerification();
@@ -90,7 +89,7 @@ class _LoginPageState extends State<LoginPage> {
         }
 
 
-        // 🔥 Get role from Firestore
+        // Get role from Firestore
         final doc =
         await _firestore.collection('users').doc(user.uid).get();
 
@@ -103,7 +102,7 @@ class _LoginPageState extends State<LoginPage> {
 
         final role = doc['role'];
 
-        // ✅ Navigate based on role
+        // Navigate based on role
         if (role == 'student') {
           Navigator.pushReplacement(
             context,
@@ -197,7 +196,7 @@ class _LoginPageState extends State<LoginPage> {
 
                       const SizedBox(height: 16),
 
-                      /// Password 👁️
+                      /// Password
                       TextField(
                         controller: passwordController,
                         obscureText: _obscurePassword,

@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  /// 🔹 SAVE USER DATA
+  /// SAVE USER DATA
   Future<void> saveUser({
     required String email,
     required String name,
@@ -19,13 +19,13 @@ class FirestoreService {
         'password': password,
         'role': role,
       });
-      print("✅ User $email saved to Firestore");
+      print("User $email saved to Firestore");
     } catch (e) {
       rethrow;
     }
   }
 
-  /// 🔹 READ USER DATA
+  /// READ USER DATA
   Future<Map<String, dynamic>?> getUser(String email) async {
     try {
       final doc = await _db.collection('users').doc(email).get();

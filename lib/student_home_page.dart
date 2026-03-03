@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart' hide Badge;
 import 'package:teachmap/profile_page.dart';
-import 'package:teachmap/room_search_page.dart';
 import 'package:teachmap/student_weekly_timetable_page.dart';
 import 'package:teachmap/widget/smart_tile.dart';
 import '_batch_routine_page.dart';
 import 'class_routine_upload _student.dart';
 import 'search_teacher_page.dart';
-import 'package:badges/badges.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'login_page.dart';
 
@@ -36,7 +34,7 @@ class _StudentHomePageState extends State<StudentHomePage> {
             ),
           ),
 
-          /// 📄 Main content
+          /// Main content
           _dashboardContent(),
         ],
       ),
@@ -156,7 +154,7 @@ class _StudentHomePageState extends State<StudentHomePage> {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         const SizedBox(height: 12),
 
-        /// 🔍 Features Tiles
+        /// Features Tiles
         SmartTile(
           context,
           icon: Icons.search,

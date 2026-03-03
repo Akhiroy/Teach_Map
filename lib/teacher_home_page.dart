@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:teachmap/class_routine_upload%20_student.dart';
 import 'package:teachmap/today_schedule_page.dart';
 import 'package:teachmap/weekly_timetable_page.dart';
+import 'package:teachmap/widget/smart_tile.dart';
 import 'attendance_list_page.dart';
 import 'notification_model.dart';
 import 'notification_page.dart';
@@ -125,13 +126,17 @@ class _TeacherHomePageState extends State<TeacherHomePage> {
               Container(
                 padding: const EdgeInsets.all(22),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.9),
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF027a9c), Color(0xFF027a9c)],
+                  ),
                   borderRadius: BorderRadius.circular(22),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withAlpha(20),
-                      blurRadius: 12,
-                      offset: const Offset(0, 6),
+                      color: Colors.black.withOpacity(0.12),
+                      blurRadius: 18,
+                      offset: const Offset(0, 10),
                     ),
                   ],
                 ),
@@ -139,26 +144,25 @@ class _TeacherHomePageState extends State<TeacherHomePage> {
                   children: [
                     const CircleAvatar(
                       radius: 30,
-                      backgroundColor: Color(0xFFE0E7FF),
-                      child: Icon(Icons.school,
-                          size: 34,
-                          color: Color(0xFF027a9c)),
+                      backgroundColor: Colors.white,
+                      child:
+                      Icon(Icons.school, size: 34, color: Color(0xFF027a9c)),
                     ),
                     const SizedBox(width: 16),
                     const Expanded(
                       child: Column(
-                        crossAxisAlignment:
-                        CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text("Welcome Teacher 👩‍🏫",
-                              style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w600)),
+                          Text("Welcome back 👋", style: TextStyle(color: Colors.white)),
                           SizedBox(height: 6),
-                          Text("Manage your classes and status",
+                          Text("Teacher 👩‍🏫",
                               style: TextStyle(
-                                  color: Colors.black54,
-                                  fontSize: 16)),
+                                  color: Colors.white,
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold)),
+                          SizedBox(height: 6),
+                          Text( "Manage your classes and status" ,
+                              style: TextStyle(color: Colors.white)),
                         ],
                       ),
                     ),
@@ -168,78 +172,70 @@ class _TeacherHomePageState extends State<TeacherHomePage> {
 
               const SizedBox(height: 20),
 
-              _buildStatusCard(),
+              /// Features Tiles
 
-              const SizedBox(height: 20),
+              SmartTile(
+                context,
+                icon: Icons.calendar_month,
+                color: const Color(0xFF009688),
+                title: "Weekly Timetable",
+                subtitle: "View weekly schedule",
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const WeeklyTimetablePage(),
+                    ),
+                  );
+                },
+              ),
 
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: [
+              SmartTile(
+                context,
+                icon: Icons.schedule,
+                color: const Color(0xFFFF9800),
+                title: "Today's Schedule",
+                subtitle: "View today’s classes",
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const TodaySchedulePage(),
+                    ),
+                  );
+                },
+              ),
 
-                  _featureCard(
-                    Icons.calendar_month,
-                    "Weekly Timetable",
-                    Color(0xFF009688),
-                    "View weekly schedule",
-                        () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const WeeklyTimetablePage(),
-                        ),
-                      );
-                    },
-                  ),
+              SmartTile(
+                context,
+                icon: Icons.fact_check,
+                color: const Color(0xFFf45648),
+                title: "Take Attendance",
+                subtitle: "Mark student attendance",
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const AttendanceListPage(),
+                    ),
+                  );
+                },
+              ),
 
-                  _featureCard(
-                    Icons.schedule,
-                    "Today's Schedule",
-                    const Color(0xFFFF9800),
-                    "View today’s classes",
-                        () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                          const TodaySchedulePage(),
-                        ),
-                      );
-                    },
-                  ),
-
-                  _featureCard(
-                    Icons.fact_check,
-                    "Take Attendance",
-                    const Color(0xFFf45648),
-                    "Mark student attendance",
-                        () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                          const AttendanceListPage(),
-                        ),
-                      );
-                    },
-                  ),
-
-                  _featureCard(
-                    Icons.upload,
-                    "Upload Routine",
-                    Colors.blueGrey,
-                    "Add new class routine",
-                        () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                          const ClassRoutineUploadPage(),
-                        ),
-                      );
-                    },
-                  ),
-                ],
+              SmartTile(
+                context,
+                icon: Icons.upload,
+                color: Colors.blueGrey,
+                title: "Upload Routine",
+                subtitle: "Add new class routine",
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const ClassRoutineUploadPage(),
+                    ),
+                  );
+                },
               ),
             ],
           ),
@@ -248,55 +244,6 @@ class _TeacherHomePageState extends State<TeacherHomePage> {
     );
   }
 
-  Widget _buildStatusCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.info,
-              color: Color(0xFF027a9c), size: 32),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment:
-              CrossAxisAlignment.start,
-              children: [
-                const Text("Current Status",
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold)),
-                const SizedBox(height: 4),
-                Text(currentStatus,
-                    style: const TextStyle(
-                        color: Colors.black54)),
-              ],
-            ),
-          ),
-          PopupMenuButton<String>(
-            onSelected: (value) =>
-                setState(() => currentStatus = value),
-            itemBuilder: (context) => const [
-              PopupMenuItem(
-                  value: "In Class",
-                  child: Text("In Class")),
-              PopupMenuItem(
-                  value: "On Break",
-                  child: Text("On Break")),
-              PopupMenuItem(
-                  value: "Busy",
-                  child: Text("Busy")),
-              PopupMenuItem(
-                  value: "Available",
-                  child: Text("Available")),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _featureCard(IconData icon, String title,
       Color color, String subtitle, VoidCallback onTap) {

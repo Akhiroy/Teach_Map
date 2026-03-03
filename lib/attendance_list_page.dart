@@ -1,32 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:url_launcher/url_launcher.dart';
-
 import 'attendance_page.dart';
 
 class AttendanceListPage extends StatelessWidget {
   const AttendanceListPage({super.key});
 
-  Future<void> _openAttendanceLink(
-      BuildContext context, String link) async {
-    if (link.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("No attendance link found")),
-      );
-      return;
-    }
-
-    final Uri uri = Uri.parse(link);
-
-    if (!await launchUrl(
-      uri,
-      mode: LaunchMode.externalApplication,
-    )) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Could not open link")),
-      );
-    }
-  }
 
   void _showDeleteDialog(
       BuildContext context,
@@ -111,10 +89,6 @@ class AttendanceListPage extends StatelessWidget {
           ),
         ),
         actions: [
-          // TextButton(
-          //   onPressed: () => Navigator.pop(context),
-          //   child: const Text("Cancel"),
-          // ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
@@ -250,7 +224,7 @@ class AttendanceListPage extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
 
-                            /// ✏ Edit Button
+                            /// Edit Button
                             Container(
                               decoration: BoxDecoration(
                                 color: Colors.indigo.shade50,
@@ -273,7 +247,7 @@ class AttendanceListPage extends StatelessWidget {
 
                             const SizedBox(width: 6),
 
-                            /// 🗑 Delete Button
+                            ///  Delete Button
                             Container(
                               decoration: BoxDecoration(
                                 color: Colors.indigo.shade50,

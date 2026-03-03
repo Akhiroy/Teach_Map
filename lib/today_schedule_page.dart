@@ -246,7 +246,7 @@ class _TodaySchedulePageState extends State<TodaySchedulePage> {
               resultText = cell;
               isCheckingRoutine = false;
 
-              // ✅ Store in app notification list
+              // Store in app notification list
               notificationList.add(
                 AppNotification(
                   title: "Class Ongoing",
@@ -256,7 +256,7 @@ class _TodaySchedulePageState extends State<TodaySchedulePage> {
               );
             });
 
-            // 🔔 Show device notification
+            // Show device notification
             await NotificationService.showNotification(
               title: "Class Ongoing",
               body: cell,
@@ -326,7 +326,7 @@ class _TodaySchedulePageState extends State<TodaySchedulePage> {
   List<List<String>> getTeacherRoutine() {
     if (todayRoutine.isEmpty || selectedAcronym == null) return [];
 
-    // 🔍 Find header row dynamically (row containing "Batch")
+    // Find header row dynamically (row containing "Batch")
     int headerIndex = todayRoutine.indexWhere((row) =>
         row.any((cell) => cell.toLowerCase().contains("batch")));
 
@@ -348,7 +348,7 @@ class _TodaySchedulePageState extends State<TodaySchedulePage> {
         String cell = j < row.length ? row[j] : "";
 
         if (j == 0 || j == 1) {
-          // ✅ Always keep Batch & Section
+          // Always keep Batch & Section
           newRow.add(cell);
         } else {
           if (cell
@@ -393,9 +393,9 @@ class _TodaySchedulePageState extends State<TodaySchedulePage> {
           ),
         ],
         elevation: 0,
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: Color(0xFFFF9800),
         iconTheme: const IconThemeData(
-          color: Colors.white, // 👈 Back arrow color
+          color: Colors.white, //  Back arrow color
         ),
         title: const Text(
           "Show Today's Routine",
@@ -415,11 +415,11 @@ class _TodaySchedulePageState extends State<TodaySchedulePage> {
 
               const SizedBox(height: 25),
 
-              /// ⏳ LOADING
+              /// LOADING
               if (isCheckingRoutine)
                 const Center(child: CircularProgressIndicator()),
 
-              /// 📌 RESULT CARD
+              /// RESULT CARD
               if (resultText != null)
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 400),
@@ -488,7 +488,7 @@ class _TodaySchedulePageState extends State<TodaySchedulePage> {
 
               const SizedBox(height: 25),
 
-              /// 📅 FULL DAY ROUTINE TABLE
+              /// FULL DAY ROUTINE TABLE
 
               if (teacherRoutine.isNotEmpty)
                 Card(

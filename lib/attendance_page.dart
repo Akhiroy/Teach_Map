@@ -1,9 +1,7 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:csv/csv.dart';
-
 import 'attendance_summary_page.dart';
 
 class AttendancePage extends StatefulWidget {
@@ -137,12 +135,6 @@ class _AttendancePageState extends State<AttendancePage> {
     );
   }
 
-  Future<void> _submitAttendance() async {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Attendance Completed ✅")),
-    );
-    Navigator.pop(context);
-  }
 
   @override
   Widget build(BuildContext context) {

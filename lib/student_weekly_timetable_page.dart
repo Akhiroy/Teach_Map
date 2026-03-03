@@ -27,7 +27,7 @@ class _StudentWeeklyTimetablePageState
   final ScrollController _scrollController =
   ScrollController();
 
-  /// 🔗 ALL DAYS MAP
+  /// ALL DAYS MAP
   final Map<String, String> daySheetMap = {
     "Saturday": "997090556",
     "Sunday": "255270977",
@@ -142,7 +142,7 @@ class _StudentWeeklyTimetablePageState
 
     List<String> originalHeader = table[headerIndex];
 
-    // ❌ REMOVE DAY COLUMN (index 0)
+    //  REMOVE DAY COLUMN (index 0)
     List<String> header =
     originalHeader.sublist(1);
 
@@ -164,7 +164,7 @@ class _StudentWeeklyTimetablePageState
       if (rowBatch == batch &&
           rowSection == section) {
 
-        // ❌ REMOVE DAY COLUMN
+        // REMOVE DAY COLUMN
         filtered.add(row.sublist(1));
         break;
       }

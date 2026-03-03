@@ -14,7 +14,6 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
-
   final idController = TextEditingController();
   final nameController = TextEditingController();
   final emailController = TextEditingController();
@@ -27,7 +26,7 @@ class _RegisterPageState extends State<RegisterPage> {
   String role = "Student";
   String selectedDept = "CSE";
 
-  // 👁️ show / hide
+  //show / hide
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
@@ -38,7 +37,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final RegExp passwordRegex =
       RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$');
 
-  // ID: starts with 018, max 16 digits
+  // ID
   final RegExp idRegex = RegExp(r'^018\d{0,13}$');
 
   InputDecoration inputStyle(String label, IconData icon) {

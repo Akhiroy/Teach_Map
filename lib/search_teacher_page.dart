@@ -242,18 +242,112 @@ class _SearchTeacherPageState extends State<SearchTeacherPage> {
     return DateFormat("h:mm a")
         .parse(timeStr + period);
   }
+  /// ================= HIGHLIGHT CURRENT PERIOD =================
+  Color getCellColor(String headerTime) {
+    try {
+      final now = DateTime.now();
+
+      if (!headerTime.contains("-")) {
+        return Colors.transparent;
+      }
+
+      final parts = headerTime.split("-");
+
+      String startPart = parts[0].trim();
+      String endPart = parts[1].trim();
+
+      String period = endPart.contains("AM") ? "AM" : "PM";
+
+      if (!startPart.contains("AM") && !startPart.contains("PM")) {
+        startPart = "$startPart $period";
+      }
+
+      DateTime startTime = DateFormat("h:mm a").parse(startPart);
+      DateTime endTime = DateFormat("h:mm a").parse(endPart);
+
+      startTime = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        startTime.hour,
+        startTime.minute,
+      );
+
+      endTime = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        endTime.hour,
+        endTime.minute,
+      );
+
+      if (now.isAfter(startTime) && now.isBefore(endTime)) {
+        return Colors.amber.shade300;
+      }
+    } catch (e) {
+      return Colors.transparent;
+    }
+
+    return Colors.transparent;
+  }
+
+  /// ================= FILTER ONLY SELECTED TEACHER ROUTINE =================
+  List<List<String>> getTeacherRoutine() {
+    if (todayRoutine.isEmpty || selectedAcronym == null) return [];
+
+    int headerIndex = todayRoutine.indexWhere(
+          (row) => row.any((cell) => cell.toLowerCase().contains("batch")),
+    );
+
+    if (headerIndex == -1) return [];
+
+    List<String> header = todayRoutine[headerIndex];
+    List<List<String>> filtered = [header];
+
+    for (int i = headerIndex + 1; i < todayRoutine.length; i++) {
+      final row = todayRoutine[i];
+
+      if (row.length < 2) continue;
+
+      List<String> newRow = [];
+      bool hasClass = false;
+
+      for (int j = 0; j < header.length; j++) {
+        String cell = j < row.length ? row[j] : "";
+
+        if (j == 0 || j == 1) {
+          newRow.add(cell);
+        } else {
+          if (cell
+              .toLowerCase()
+              .contains(selectedAcronym!.toLowerCase())) {
+            newRow.add(cell);
+            hasClass = true;
+          } else {
+            newRow.add("");
+          }
+        }
+      }
+
+      if (hasClass) {
+        filtered.add(newRow);
+      }
+    }
+
+    return filtered;
+  }
 
   /// ================= UI =================
   @override
-  @override
   Widget build(BuildContext context) {
+    final teacherRoutine = getTeacherRoutine();
     return Scaffold(
       backgroundColor: const Color(0xfff5f7fb),
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Color(0xFF027a9c),
         iconTheme: const IconThemeData(
-          color: Colors.white, // 👈 Back arrow color
+          color: Colors.white, // Back arrow color
         ),
         title: const Text(
           "Search Teacher",
@@ -302,7 +396,7 @@ class _SearchTeacherPageState extends State<SearchTeacherPage> {
 
               const SizedBox(height: 20),
 
-              /// 👨‍🏫 SEARCH RESULTS
+              /// SEARCH RESULTS
               if (filteredTeachers.isNotEmpty)
                 Container(
                   height: 220,
@@ -357,11 +451,11 @@ class _SearchTeacherPageState extends State<SearchTeacherPage> {
 
               const SizedBox(height: 25),
 
-              /// ⏳ LOADING
+              /// LOADING
               if (isCheckingRoutine)
                 const Center(child: CircularProgressIndicator()),
 
-              /// 📌 RESULT CARD
+              /// RESULT CARD
               if (resultText != null)
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 400),
@@ -430,8 +524,8 @@ class _SearchTeacherPageState extends State<SearchTeacherPage> {
 
               const SizedBox(height: 25),
 
-              /// 📅 FULL DAY ROUTINE TABLE
-              if (todayRoutine.isNotEmpty)
+              /// FULL DAY ROUTINE TABLE
+              if (teacherRoutine.isNotEmpty)
                 Card(
                   elevation: 6,
                   shape: RoundedRectangleBorder(
@@ -440,8 +534,7 @@ class _SearchTeacherPageState extends State<SearchTeacherPage> {
                   child: ExpansionTile(
                     title: const Text(
                       "View Full Day Routine",
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold),
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     childrenPadding: const EdgeInsets.all(15),
                     children: [
@@ -451,35 +544,52 @@ class _SearchTeacherPageState extends State<SearchTeacherPage> {
                           scrollDirection: Axis.vertical,
                           child: DataTable(
                             headingRowColor:
-                            MaterialStateProperty.all(
-                                Colors.blue.shade100),
-                            border: TableBorder.all(
-                                color: Colors.grey.shade300),
-                            columns: todayRoutine[0]
+                            MaterialStateProperty.all(Colors.blue.shade100),
+                            border:
+                            TableBorder.all(color: Colors.grey.shade300),
+
+                            columns: teacherRoutine[0]
                                 .map(
                                   (header) => DataColumn(
                                 label: Text(
                                   header,
                                   style: const TextStyle(
-                                      fontWeight:
-                                      FontWeight.bold),
+                                      fontWeight: FontWeight.bold),
                                 ),
                               ),
                             )
                                 .toList(),
-                            rows: todayRoutine
-                                .sublist(1)
+
+                            rows: teacherRoutine.length > 1
+                                ? teacherRoutine
+                                .skip(1)
                                 .map(
                                   (row) => DataRow(
-                                cells: row
-                                    .map(
-                                      (cell) =>
-                                      DataCell(Text(cell)),
-                                )
-                                    .toList(),
+                                cells: List.generate(
+                                  teacherRoutine[0].length,
+                                      (index) {
+                                    String cellText =
+                                    index < row.length
+                                        ? row[index]
+                                        : "";
+
+                                    return DataCell(
+                                      Container(
+                                        padding:
+                                        const EdgeInsets.all(8),
+                                        color: index >= 2
+                                            ? getCellColor(
+                                            teacherRoutine[0][index])
+                                            : Colors.transparent,
+                                        child: Text(cellText),
+                                      ),
+                                    );
+                                  },
+                                ),
                               ),
                             )
-                                .toList(),
+                                .toList()
+                                : [],
                           ),
                         ),
                       ),

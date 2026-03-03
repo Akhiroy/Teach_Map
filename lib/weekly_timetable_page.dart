@@ -24,7 +24,7 @@ class _WeeklyTimetablePageState
   final ScrollController _scrollController =
   ScrollController();
 
-  /// 🔗 ALL DAYS MAP
+  /// ALL DAYS MAP
   final Map<String, String> daySheetMap = {
     "Saturday": "997090556",
     "Sunday": "255270977",

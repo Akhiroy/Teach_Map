@@ -76,7 +76,7 @@ class _ClassRoutineUploadPageState extends State<ClassRoutineUploadPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
 
-            /// 🔹 HEADER SECTION
+            /// HEADER SECTION
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -107,7 +107,7 @@ class _ClassRoutineUploadPageState extends State<ClassRoutineUploadPage> {
 
             const SizedBox(height: 35),
 
-            /// 🔹 INPUT SECTION
+            /// INPUT SECTION
             Container(
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
@@ -166,7 +166,7 @@ class _ClassRoutineUploadPageState extends State<ClassRoutineUploadPage> {
 
                   const SizedBox(height: 25),
 
-                  /// 🔹 SAVE BUTTON
+                  /// SAVE BUTTON
                   SizedBox(
                     width: double.infinity,
                     height: 48,
